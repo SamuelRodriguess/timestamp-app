@@ -18,19 +18,28 @@ app.get("/api/", function(req, res) {
   res.json({ unix: resDate.valueOf(), utc: resDate.toUTCString() });
 });
 
-// normal timestamp endpoint...
-app.get("/api/:date?", function(req, res) {
-  var reqString = req.params.date;
-  var resDate;
-  // check to see if the string is a unix timestamp (in this challenge we can just see if it contains a dash as the 5th character), and perform the conversion to an integer if necessary
-  if (!/^\d{4}-/.test(reqString)) reqString = parseInt(reqString);
-  resDate = new Date(reqString);
-  // this comparision is used to see if the date is a valid date, is there another way to do this?
-  if (resDate.getTime() !== resDate.getTime()) {
-    res.json({ error: "Invalid Date" });
+app.get('/api/:date?', (req, res) => {
+  let dateParam = req.params.date;
+
+  let date;
+  if (!dateParam) {
+    date = new Date();
+  } else if (/^\d+$/.test(dateParam)) {
+    date = new Date(parseInt(dateParam));
+  } else {
+    date = new Date(dateParam);
   }
-  res.json({ unix: resDate.valueOf(), utc: resDate.toUTCString() });
+
+  if (date.toString() === "Invalid Date") {
+    return res.json({ error: "Invalid Date" });
+  }
+
+  res.json({
+    unix: date.getTime(),
+    utc: date.toUTCString()
+  });
 });
+
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
