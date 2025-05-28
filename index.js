@@ -1,32 +1,40 @@
-// index.js
-// where your node app starts
+const express = require('express');
+const app = express();
 
-// init project
-var express = require('express');
-var app = express();
+// Endpoint GET que recebe parâmetro opcional "date"
+app.get('/api/:date?', (req, res) => {
+  const dateParam = req.params.date;
 
-// enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
-// so that your API is remotely testable by FCC 
-var cors = require('cors');
-app.use(cors({optionsSuccessStatus: 200}));  // some legacy browsers choke on 204
+  let date;
 
-// http://expressjs.com/en/starter/static-files.html
-app.use(express.static('public'));
+  if (!dateParam) {
+    // Sem parâmetro, data atual
+    date = new Date();
+  } else {
+    // Verifica se o parâmetro é um número (timestamp)
+    if (/^\d+$/.test(dateParam)) {
+      // Converte para número inteiro
+      date = new Date(parseInt(dateParam));
+    } else {
+      // Tenta criar data a partir da string
+      date = new Date(dateParam);
+    }
+  }
 
-// http://expressjs.com/en/starter/basic-routing.html
-app.get("/", function (req, res) {
-  res.sendFile(__dirname + '/views/index.html');
+  // Verifica se a data é válida
+  if (date.toString() === "Invalid Date") {
+    return res.json({ error: "Invalid Date" });
+  }
+
+  // Retorna JSON com unix e utc
+  res.json({
+    unix: date.getTime(),
+    utc: date.toUTCString()
+  });
 });
 
-
-// your first API endpoint... 
-app.get("/api/hello", function (req, res) {
-  res.json({greeting: 'hello API'});
-});
-
-
-
-// Listen on port set in environment variable or default to 3000
-var listener = app.listen(process.env.PORT || 3000, function () {
-  console.log('Your app is listening on port ' + listener.address().port);
+// Define porta e inicia servidor
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, () => {
+  console.log(`Servidor rodando na porta ${PORT}`);
 });
