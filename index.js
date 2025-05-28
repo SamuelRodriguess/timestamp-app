@@ -12,43 +12,36 @@ app.get("/", function (req, res) {
   res.sendFile(__dirname + '/views/index.html');
 });
 
-app.get('/api/:date?', (req, res) => {
-  const dateParam = req.params.date;
+app.get("/api/:date", (req, res) => {
+  let dateString = req.params.date_string;
 
-  let date;
-
-  if (!dateParam) {
-    // Sem parâmetro: data atual
-    date = new Date();
-  } else {
-    // Se o parâmetro for um número inteiro (timestamp em milissegundos)
-    if (/^\d+$/.test(dateParam)) {
-      // Criar data a partir do timestamp numérico
-      date = new Date(parseInt(dateParam));
-    } else {
-      // Tenta criar data a partir da string
-      date = new Date(dateParam);
-    }
+  // Caso não tenha parâmetro, retorna data atual
+  if (!dateString) {
+    const now = new Date();
+    return res.json({ unix: now.getTime(), utc: now.toUTCString() });
   }
 
-  // Verifica se a data é inválida
-  if (date.toString() === "Invalid Date") {
+  // Se for timestamp numérico (5 ou mais dígitos)
+  if (/^\d{5,}$/.test(dateString)) {
+    let dateInt = parseInt(dateString);
+
+    let date = new Date(dateInt);
+
+    if (date.toString() === "Invalid Date") {
+      return res.json({ error: "Invalid Date" });
+    }
+
+    return res.json({ unix: date.getTime(), utc: date.toUTCString() });
+  }
+
+  // Caso seja string de data
+  let dateObject = new Date(dateString);
+
+  if (dateObject.toString() === "Invalid Date") {
     return res.json({ error: "Invalid Date" });
   }
 
-
-  console.log("🚀 ~ app.get ~ date:", date)
-
-  // Resposta JSON com unix e utc
-  res.json({
-    unix: date.getTime(),
-    utc: date.toUTCString()
-  });
-});
-
-// your first API endpoint... 
-app.get("/api/hello", function (req, res) {
-  res.json({ greeting: 'hello API' });
+  return res.json({ unix: dateObject.getTime(), utc: dateObject.toUTCString() });
 });
 
 const PORT = process.env.PORT || 3000;
